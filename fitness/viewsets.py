@@ -9,10 +9,12 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from .authentication import get_fitness_user, is_administrator
-from .models import ClassBooking, FitnessClass, Membership, Trainer
+from .filters import ClassBookingFilter, FitnessClassFilter, MembershipFilter
+from .models import ClassBooking, FavoriteClass, FitnessClass, Membership, Trainer
 from .permissions import IsAdministrator, IsOwnerOrAdministrator, ReadOnlyOrAdministrator
 from .serializers import (
     ClassBookingSerializer,
+    FavoriteClassSerializer,
     FitnessClassSerializer,
     MembershipSerializer,
     TrainerSerializer,
@@ -22,9 +24,9 @@ from .serializers import (
 class FitnessClassViewSet(viewsets.ModelViewSet):
     serializer_class = FitnessClassSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['trainer']
+    filterset_class = FitnessClassFilter
     search_fields = ['name', 'trainer__user__full_name']
-    ordering_fields = ['created_at', 'capacity']
+    ordering_fields = ['created_at', 'capacity', 'active_bookings_count', 'attended_count', 'favorite_count']
     ordering = ['-created_at']
     permission_classes = [ReadOnlyOrAdministrator]
 
@@ -33,6 +35,16 @@ class FitnessClassViewSet(viewsets.ModelViewSet):
             active_bookings_count=Count(
                 'classbooking',
                 filter=Q(classbooking__status__in=('booked', 'attended')),
+                distinct=True,
+            ),
+            attended_count=Count(
+                'classbooking',
+                filter=Q(classbooking__status='attended'),
+                distinct=True,
+            ),
+            favorite_count=Count(
+                'favoriteclass',
+                distinct=True,
             ),
         )
 
@@ -55,9 +67,20 @@ class FitnessClassViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        user = get_fitness_user(self.request)
+        if user:
+            context['favorite_class_ids'] = set(
+                FavoriteClass.objects.filter(user=user).values_list('fitness_class_id', flat=True)
+            )
+        else:
+            context['favorite_class_ids'] = set()
+        return context
+
     @action(methods=['GET'], detail=False)
     def popular_classes(self, request):
-        classes = self.get_queryset().order_by('-active_bookings_count')[:10]
+        classes = self.get_queryset().order_by('-active_bookings_count', '-favorite_count')[:10]
         serializer = self.get_serializer(classes, many=True)
         return Response(serializer.data)
 
@@ -78,7 +101,7 @@ class FitnessClassViewSet(viewsets.ModelViewSet):
 class ClassBookingViewSet(viewsets.ModelViewSet):
     serializer_class = ClassBookingSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'fitness_class', 'user']
+    filterset_class = ClassBookingFilter
     search_fields = ['user__full_name', 'fitness_class__name']
     ordering_fields = ['created_at', 'start_time']
     ordering = ['-created_at']
@@ -111,10 +134,33 @@ class ClassBookingViewSet(viewsets.ModelViewSet):
         return super().retrieve(request, *args, **kwargs)
 
 
+class FavoriteClassViewSet(viewsets.ModelViewSet):
+    serializer_class = FavoriteClassSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['fitness_class', 'user']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+    permission_classes = [IsOwnerOrAdministrator]
+
+    def get_queryset(self):
+        qs = FavoriteClass.objects.select_related('user', 'user__role', 'fitness_class', 'fitness_class__trainer__user')
+        user = get_fitness_user(self.request)
+        if user and not is_administrator(user):
+            qs = qs.filter(user=user)
+        return qs
+
+    def perform_create(self, serializer):
+        user = get_fitness_user(self.request)
+        if user and not is_administrator(user):
+            serializer.save(user=user)
+        else:
+            serializer.save()
+
+
 class MembershipViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'tariff_type']
+    filterset_class = MembershipFilter
     search_fields = ['user__full_name', 'tariff_type__name']
     ordering_fields = ['start_date', 'end_date', 'created_at']
     ordering = ['-start_date']

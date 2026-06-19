@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import ClassBooking, FitnessClass, Membership, Trainer, User
+from .models import ClassBooking, FavoriteClass, FitnessClass, Membership, Trainer, User
 from .validators import (
     get_active_bookings_count,
     validate_active_membership,
@@ -14,12 +14,17 @@ class FitnessClassSerializer(serializers.ModelSerializer):
     trainer_name = serializers.CharField(source='trainer.user.full_name', read_only=True)
     bookings_count = serializers.SerializerMethodField()
     free_spots = serializers.SerializerMethodField()
+    attended_count = serializers.SerializerMethodField()
+    favorite_count = serializers.SerializerMethodField()
+    occupancy_percent = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField()
 
     class Meta:
         model = FitnessClass
         fields = (
             'id', 'name', 'description', 'trainer', 'trainer_name',
-            'capacity', 'bookings_count', 'free_spots', 'created_at',
+            'capacity', 'bookings_count', 'free_spots', 'attended_count',
+            'favorite_count', 'occupancy_percent', 'is_favorite', 'created_at',
         )
         read_only_fields = ('created_at',)
 
@@ -31,6 +36,25 @@ class FitnessClassSerializer(serializers.ModelSerializer):
     def get_free_spots(self, obj):
         occupied = self.get_bookings_count(obj)
         return max(obj.capacity - occupied, 0)
+
+    def get_attended_count(self, obj):
+        if hasattr(obj, 'attended_count'):
+            return obj.attended_count
+        return obj.classbooking_set.filter(status='attended').count()
+
+    def get_favorite_count(self, obj):
+        if hasattr(obj, 'favorite_count'):
+            return obj.favorite_count
+        return obj.favoriteclass_set.count()
+
+    def get_occupancy_percent(self, obj):
+        if obj.capacity == 0:
+            return 0
+        return round(self.get_bookings_count(obj) / obj.capacity * 100, 2)
+
+    def get_is_favorite(self, obj):
+        favorite_class_ids = self.context.get('favorite_class_ids', set())
+        return obj.id in favorite_class_ids
 
     def validate_capacity(self, value):
         if value < 1 or value > 50:
@@ -137,6 +161,16 @@ class ClassBookingSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'fitness_class': exc.messages})
 
         return data
+
+
+class FavoriteClassSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    class_name = serializers.CharField(source='fitness_class.name', read_only=True)
+
+    class Meta:
+        model = FavoriteClass
+        fields = ('id', 'user', 'user_name', 'fitness_class', 'class_name', 'created_at')
+        read_only_fields = ('created_at',)
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
