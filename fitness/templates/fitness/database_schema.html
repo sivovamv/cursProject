@@ -281,67 +281,6 @@
                 </div>
             </div>
 
-            <!-- Club -->
-            <div class="table-card">
-                <div class="table-header">CLUB (Клуб)</div>
-                <div class="field">
-                    <span class="field-name">id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint pk">PK</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">name</span>
-                    <span class="field-type">VARCHAR(100)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">city</span>
-                    <span class="field-type">VARCHAR(100)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">address</span>
-                    <span class="field-type">VARCHAR(255)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">phone</span>
-                    <span class="field-type">VARCHAR(20)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">work_hours</span>
-                    <span class="field-type">VARCHAR(100)</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">image</span>
-                    <span class="field-type">VARCHAR(100)</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">description</span>
-                    <span class="field-type">TEXT</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">created_by_id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint fk">FK → USER</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">updated_by_id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint fk">FK → USER</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">created_at</span>
-                    <span class="field-type">DATETIME</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">updated_at</span>
-                    <span class="field-type">DATETIME</span>
-                </div>
-            </div>
-
             <!-- Trainer -->
             <div class="table-card">
                 <div class="table-header">TRAINER (Тренер)</div>
@@ -355,11 +294,6 @@
                     <span class="field-type">INTEGER</span>
                     <span class="field-constraint fk">FK → USER</span>
                     <span class="field-constraint uk">UNIQUE</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">club_id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint fk">FK → CLUB</span>
                 </div>
                 <div class="field">
                     <span class="field-name">specialization</span>
@@ -394,25 +328,6 @@
                 <div class="field">
                     <span class="field-name">updated_at</span>
                     <span class="field-type">DATETIME</span>
-                </div>
-            </div>
-
-            <!-- WorkoutType -->
-            <div class="table-card">
-                <div class="table-header">WORKOUT_TYPE (Тип занятия)</div>
-                <div class="field">
-                    <span class="field-name">id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint pk">PK</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">name</span>
-                    <span class="field-type">VARCHAR(100)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">description</span>
-                    <span class="field-type">TEXT</span>
-                    <span class="optional">(опционально)</span>
                 </div>
             </div>
 
@@ -456,19 +371,18 @@
                     <span class="field-constraint pk">PK</span>
                 </div>
                 <div class="field">
-                    <span class="field-name">club_id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint fk">FK → CLUB</span>
+                    <span class="field-name">name</span>
+                    <span class="field-type">VARCHAR(100)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">description</span>
+                    <span class="field-type">TEXT</span>
+                    <span class="optional">(опционально)</span>
                 </div>
                 <div class="field">
                     <span class="field-name">trainer_id</span>
                     <span class="field-type">INTEGER</span>
                     <span class="field-constraint fk">FK → TRAINER</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">workout_type_id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint fk">FK → WORKOUT_TYPE</span>
                 </div>
                 <div class="field">
                     <span class="field-name">capacity</span>
@@ -625,58 +539,6 @@
                 </div>
             </div>
 
-            <!-- News -->
-            <div class="table-card">
-                <div class="table-header">NEWS (Новости/Акции)</div>
-                <div class="field">
-                    <span class="field-name">id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint pk">PK</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">title</span>
-                    <span class="field-type">VARCHAR(200)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">content</span>
-                    <span class="field-type">TEXT</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">image</span>
-                    <span class="field-type">VARCHAR(100)</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">start_date</span>
-                    <span class="field-type">DATE</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">end_date</span>
-                    <span class="field-type">DATE</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">created_by_id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint fk">FK → USER</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">updated_by_id</span>
-                    <span class="field-type">INTEGER</span>
-                    <span class="field-constraint fk">FK → USER</span>
-                    <span class="optional">(опционально)</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">created_at</span>
-                    <span class="field-type">DATETIME</span>
-                </div>
-                <div class="field">
-                    <span class="field-name">updated_at</span>
-                    <span class="field-type">DATETIME</span>
-                </div>
-            </div>
         </div>
 
         <div class="relationships">
@@ -703,20 +565,8 @@
                     Один пользователь может добавить много занятий в избранное
                 </div>
                 <div class="relationship-item">
-                    <strong>CLUB (1)</strong> → <strong>TRAINER (N)</strong><br>
-                    Один клуб может нанять много тренеров
-                </div>
-                <div class="relationship-item">
-                    <strong>CLUB (1)</strong> → <strong>FITNESS_CLASS (N)</strong><br>
-                    Один клуб может проводить много занятий
-                </div>
-                <div class="relationship-item">
                     <strong>TRAINER (1)</strong> → <strong>FITNESS_CLASS (N)</strong><br>
                     Один тренер может вести много занятий
-                </div>
-                <div class="relationship-item">
-                    <strong>WORKOUT_TYPE (1)</strong> → <strong>FITNESS_CLASS (N)</strong><br>
-                    Один тип занятия может быть у многих занятий
                 </div>
                 <div class="relationship-item">
                     <strong>FITNESS_CLASS (1)</strong> → <strong>CLASS_BOOKING (N)</strong><br>
@@ -728,16 +578,6 @@
                 </div>
                 <div class="relationship-item">
                     <strong>TARIFF_TYPE (1)</strong> → <strong>MEMBERSHIP (N)</strong><br>
-                    Один тип тарифа может использоваться в многих абонементах
-                </div>
-                <div class="relationship-item">
-                    <strong>USER (1)</strong> → <strong>CLUB.created_by (N)</strong><br>
-                    Один пользователь может создать много клубов
-                </div>
-                <div class="relationship-item">
-                    <strong>USER (1)</strong> → <strong>NEWS (N)</strong><br>
-                    Один пользователь может создать много новостей
-                </div>
             </div>
         </div>
 

@@ -1,0 +1,7 @@
+ROLE_ADMIN = 'Администратор'
+ROLE_CLIENT = 'Клиент'
+
+MIN_MEMBERSHIP_PRICE = 500
+MAX_MEMBERSHIP_PRICE = 100_000
+
+PHONE_REGEX = r'^(\+7|8)\d{10}$'

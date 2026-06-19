@@ -25,7 +25,7 @@ class Command(BaseCommand):
         
         self.stdout.write(f'\nЗанятий за последний месяц: {recent_classes.count()}')
         for fitness_class in recent_classes[:10]:
-            workout_name = fitness_class.workout_type.name if fitness_class.workout_type else 'N/A'
+            workout_name = fitness_class.name
             trainer_name = fitness_class.trainer.user.full_name if fitness_class.trainer else 'N/A'
             self.stdout.write(f'  - {workout_name} (тренер: {trainer_name})')
         

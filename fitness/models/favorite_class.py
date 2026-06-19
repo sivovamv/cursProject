@@ -15,4 +15,4 @@ class FavoriteClass(models.Model):
         unique_together = [('user', 'fitness_class')]
 
     def __str__(self):
-        return f'{self.user.full_name} добавил в избранное {self.fitness_class.workout_type.name if self.fitness_class.workout_type else "Занятие"}'
+        return f'{self.user.full_name} добавил в избранное {self.fitness_class.name}'

@@ -37,12 +37,9 @@ http://127.0.0.1:8000/admin/
 Проект содержит следующие модели:
 - Role (Роли пользователей)
 - User (Пользователи)
-- Club (Клубы)
 - Trainer (Тренеры)
-- WorkoutType (Типы занятий)
-- FitnessClass (Групповые занятия)
+- FitnessClass (Занятия)
 - TariffType (Типы абонементов)
 - Membership (Абонементы)
 - ClassBooking (Записи на занятия)
 - FavoriteClass (Избранные занятия)
-- News (Новости и акции)

@@ -1,0 +1,27 @@
+{% extends 'fitness/base.html' %}
+
+{% block title %}Личный кабинет — Фитнес-центр{% endblock %}
+{% block subtitle %}Профиль пользователя{% endblock %}
+
+{% block content %}
+<section>
+    <h2>Личный кабинет</h2>
+    <p style="margin-bottom:16px;">Роль: <strong>{{ user.role.name }}</strong></p>
+
+    <form method="post" class="profile-form">
+        {% csrf_token %}
+        <label for="full_name">ФИО</label>
+        <input id="full_name" type="text" name="full_name" value="{{ user.full_name }}" required>
+
+        <label for="email">E-mail</label>
+        <input id="email" type="email" name="email" value="{{ user.email }}" required>
+
+        <label for="phone">Телефон (+7XXXXXXXXXX или 8XXXXXXXXXX)</label>
+        <input id="phone" type="text" name="phone" value="{{ user.phone }}" placeholder="+79991234567">
+
+        <div style="margin-top:16px;">
+            <button type="submit" class="btn">Сохранить</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -15,3 +15,11 @@ class TariffType(models.Model):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        from ..validators import validate_membership_price
+        validate_membership_price(self.price)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)

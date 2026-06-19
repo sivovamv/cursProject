@@ -1,0 +1,79 @@
+{% extends 'fitness/base.html' %}
+
+{% block title %}Занятия — Фитнес-центр{% endblock %}
+{% block subtitle %}Каталог занятий{% endblock %}
+
+{% block content %}
+<section>
+    <h2>Каталог занятий</h2>
+
+    <form method="get" class="filters">
+        <input type="text" name="q" value="{{ search }}" placeholder="Поиск по названию, описанию, тренеру">
+        <select name="trainer">
+            <option value="">Все тренеры</option>
+            {% for trainer in trainers %}
+            <option value="{{ trainer.id }}" {% if trainer_id == trainer.id|stringformat:'s' %}selected{% endif %}>
+                {{ trainer.user.full_name }}
+            </option>
+            {% endfor %}
+        </select>
+        <select name="sort">
+            <option value="name" {% if sort == 'name' %}selected{% endif %}>По названию</option>
+            <option value="trainer" {% if sort == 'trainer' %}selected{% endif %}>По тренеру</option>
+            <option value="spots" {% if sort == 'spots' %}selected{% endif %}>По вместимости</option>
+        </select>
+        <button type="submit" class="btn">Применить</button>
+        <a href="{% url 'fitness:classes' %}" class="btn" style="background:#666;">Сбросить</a>
+    </form>
+
+    {% if user and not has_active_membership %}
+    <p style="margin-bottom:12px;color:#b45309;">Для записи нужен активный абонемент. Обратитесь к администратору.</p>
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Занятие</th>
+                <th>Тренер</th>
+                <th>Описание</th>
+                <th>Места</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in class_rows %}
+            <tr>
+                <td><strong>{{ row.object.name }}</strong></td>
+                <td>{{ row.object.trainer.user.full_name }}</td>
+                <td>{{ row.object.description|default:'—' }}</td>
+                <td>
+                    {% if row.free_spots > 0 %}
+                    <span class="badge badge-ok">Свободно: {{ row.free_spots }} / {{ row.object.capacity }}</span>
+                    {% else %}
+                    <span class="badge badge-no">Мест нет ({{ row.occupied }}/{{ row.object.capacity }})</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user %}
+                        {% if row.already_booked %}
+                        <span class="badge badge-warn">Уже записаны</span>
+                        {% elif row.free_spots > 0 and has_active_membership %}
+                        <form method="post" action="{% url 'fitness:book_class' row.object.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn">Записаться</button>
+                        </form>
+                        {% elif row.free_spots == 0 %}
+                        <span class="badge badge-no">Нет мест</span>
+                        {% endif %}
+                    {% else %}
+                    <a href="{% url 'fitness:login' %}">Войти для записи</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="empty">Занятия не найдены</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

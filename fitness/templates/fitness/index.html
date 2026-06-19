@@ -1,210 +1,22 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Фитнес-центр</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends 'fitness/base.html' %}
 
-        body {
-            background: #1a2332;
-            color: #000000;
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            line-height: 1.6;
-        }
+{% block title %}Фитнес-центр{% endblock %}
+{% block subtitle %}Добро пожаловать{% endblock %}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-        }
-
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            color: #ffffff;
-        }
-
-        p {
-            font-size: 1.1em;
-            color: #ffffff;
-        }
-
-        nav {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 15px;
-            background: #ffffff;
-            border-radius: 5px;
-        }
-
-        nav span {
-            color: #000000;
-        }
-
-        nav a {
-            color: #000000;
-            text-decoration: none;
-            margin: 0 15px;
-            padding: 8px 15px;
-            background: #ffffff;
-            border: 1px solid #000000;
-            border-radius: 3px;
-            display: inline-block;
-        }
-
-        nav a:hover {
-            background: #f0f0f0;
-        }
-
-        section {
-            margin-bottom: 40px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 5px;
-        }
-
-        h2 {
-            color: #000000;
-            margin-bottom: 20px;
-            font-size: 2em;
-            font-weight: bold;
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #000000;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #ffffff;
-        }
-
-        th {
-            background: #ffffff;
-            color: #000000;
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
-            border-bottom: 2px solid #000000;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #cccccc;
-            color: #000000;
-        }
-
-        tr:hover {
-            background: #f5f5f5;
-        }
-
-        .empty {
-            text-align: center;
-            color: #000000;
-            padding: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Фитнес-центр</h1>
-            <p>Система управления фитнес-центром</p>
-        </header>
-
-        <nav>
-            {% if user_name %}
-                <span style="margin-right: 20px;">Привет, {{ user_name }}!</span>
-                <a href="/logout/">Выход</a>
-            {% else %}
-                <a href="/login/">Вход</a>
-            {% endif %}
-            <a href="/admin/">Админка</a>
-        </nav>
-
-        <section>
-            <h2>Абонементы</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Пользователь</th>
-                        <th>Тип абонемента</th>
-                        <th>Дата начала</th>
-                        <th>Дата окончания</th>
-                        <th>Статус</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for membership in memberships %}
-                    <tr>
-                        <td>{{ membership.user.full_name }}</td>
-                        <td>{{ membership.tariff_type.name }}</td>
-                        <td>{{ membership.start_date }}</td>
-                        <td>{{ membership.end_date }}</td>
-                        <td>{{ membership.get_status_display }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="5" class="empty">Нет абонементов</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-
-        <section>
-            <h2>Тренеры</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Имя</th>
-                        <th>Специализация</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for trainer in trainers %}
-                    <tr>
-                        <td>{{ trainer.user.full_name }}</td>
-                        <td>{{ trainer.specialization }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="2" class="empty">Нет тренеров</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-
-        <section>
-            <h2>Занятия</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Занятие</th>
-                        <th>Тренер</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for class in classes %}
-                    <tr>
-                        <td>{{ class.workout_type.name }}</td>
-                        <td>{{ class.trainer.user.full_name }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="2" class="empty">Нет занятий</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
+{% block content %}
+<section>
+    <h2>Клиентский раздел</h2>
+    <p style="text-align:center;margin-bottom:20px;">
+        Просматривайте занятия, записывайтесь на тренировки и управляйте абонементом.
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+        <a class="btn" href="{% url 'fitness:classes' %}">Каталог занятий</a>
+        {% if user %}
+        <a class="btn" href="{% url 'fitness:my_memberships' %}">Мой абонемент</a>
+        <a class="btn" href="{% url 'fitness:profile' %}">Личный кабинет</a>
+        {% else %}
+        <a class="btn" href="{% url 'fitness:login' %}">Войти</a>
+        {% endif %}
     </div>
-</body>
-</html>
+</section>
+{% endblock %}

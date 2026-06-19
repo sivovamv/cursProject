@@ -28,6 +28,23 @@ class ClassBooking(models.Model):
         unique_together = [('user', 'fitness_class', 'start_time')]
 
     def __str__(self):
+        class_name = self.fitness_class.name if self.fitness_class else 'Занятие'
         if self.start_time:
-            return f'{self.user.full_name} - {self.fitness_class.workout_type.name if self.fitness_class.workout_type else "Занятие"} ({self.start_time})'
-        return f'{self.user.full_name} - {self.fitness_class.workout_type.name if self.fitness_class.workout_type else "Занятие"}'
+            return f'{self.user.full_name} — {class_name} ({self.start_time})'
+        return f'{self.user.full_name} — {class_name}'
+
+    def clean(self):
+        """Бизнес-правила для новой клиентской записи (вызывается явно, не из админки)."""
+        if self.status not in ('booked', 'attended'):
+            return
+        from ..validators import (
+            validate_active_membership,
+            validate_class_capacity,
+            validate_phone_format,
+        )
+        validate_class_capacity(self.fitness_class, exclude_booking_id=self.pk)
+        validate_active_membership(self.user)
+        validate_phone_format(self.user.phone)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)

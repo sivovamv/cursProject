@@ -1,0 +1,58 @@
+{% extends 'fitness/base.html' %}
+
+{% block title %}Мой абонемент — Фитнес-центр{% endblock %}
+{% block subtitle %}Абонементы и история посещений{% endblock %}
+
+{% block content %}
+<section>
+    <h2>Мои абонементы</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Тариф</th>
+                <th>Период</th>
+                <th>Статус</th>
+                <th>Стоимость</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membership in memberships %}
+            <tr>
+                <td>{{ membership.tariff_type.name }}</td>
+                <td>{{ membership.start_date }} — {{ membership.end_date }}</td>
+                <td>{{ membership.get_status_display }}</td>
+                <td>{{ membership.tariff_type.price }} ₽</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty">У вас пока нет абонементов</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>История записей (посещений: {{ visited_count }})</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Занятие</th>
+                <th>Тренер</th>
+                <th>Статус</th>
+                <th>Дата записи</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.fitness_class.name }}</td>
+                <td>{{ booking.fitness_class.trainer.user.full_name }}</td>
+                <td>{{ booking.get_status_display }}</td>
+                <td>{{ booking.created_at|date:'d.m.Y H:i' }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty">Записей пока нет</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

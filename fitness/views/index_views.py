@@ -1,26 +1,15 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
-from ..models import Membership, Trainer, FitnessClass, User
+from ..models import User
+from ..decorators import get_session_user
 
 
 def index(request):
     """Главная страница"""
-    memberships = Membership.objects.select_related('user', 'tariff_type').all()
-    trainers = Trainer.objects.select_related('user').all()
-    classes = FitnessClass.objects.select_related('trainer__user', 'workout_type').all()
-    
-    # Проверяем, вошел ли пользователь
-    user_name = request.session.get('user_name', None)
-    
-    context = {
-        'memberships': memberships,
-        'trainers': trainers,
-        'classes': classes,
-        'user_name': user_name,
-    }
-    return render(request, 'fitness/index.html', context)
-
+    return render(request, 'fitness/index.html', {
+        'user': get_session_user(request),
+    })
 
 def login_view(request):
     """Форма входа"""
@@ -33,7 +22,10 @@ def login_view(request):
             return render(request, 'fitness/login.html')
         
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.select_related('role').get(email=email)
+            if user.is_blocked:
+                messages.error(request, 'Аккаунт заблокирован. Обратитесь к администратору.')
+                return render(request, 'fitness/login.html')
             # Проверяем пароль
             # Если пароль хеширован через Django (начинается с pbkdf2_)
             if user.password_hash.startswith('pbkdf2_'):
