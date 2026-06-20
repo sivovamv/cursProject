@@ -1,12 +1,20 @@
 from django.core.management.base import BaseCommand
 from fitness.models import Membership, FitnessClass
 from datetime import date, timedelta
+from typing import Any
 
 
 class Command(BaseCommand):
     help = 'Экспорт данных: активные абонементы и занятия за последний месяц'
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
+        """
+        Экспорт краткой статистики по активным абонементам и занятиям.
+
+        Args:
+            *args: Позиционные аргументы management-команды.
+            **options: Опции management-команды.
+        """
         # Экспорт активных абонементов
         active_memberships = Membership.objects.filter(
             status='active',

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from typing import Any
 
 from .models import (
     User, Trainer, FitnessClass,
@@ -50,7 +51,8 @@ class UserAdmin(admin.ModelAdmin):
         }),
     )
 
-    def get_memberships_count(self, obj):
+    def get_memberships_count(self, obj: User) -> int:
+        """Количество абонементов пользователя."""
         return obj.memberships.count()
     get_memberships_count.short_description = 'Количество абонементов'
 
@@ -75,20 +77,24 @@ class TrainerAdmin(admin.ModelAdmin):
     exclude = ('bio', 'photo', 'updated_by')
     inlines = [TrainerClassInline]
 
-    def get_user_name(self, obj):
+    def get_user_name(self, obj: Trainer) -> str:
+        """ФИО пользователя, связанного с тренером."""
         return obj.user.full_name
     get_user_name.short_description = 'Тренер'
 
-    def get_classes_count(self, obj):
+    def get_classes_count(self, obj: Trainer) -> int:
+        """Количество занятий тренера."""
         return obj.fitnessclass_set.count()
     get_classes_count.short_description = 'Количество занятий'
 
-    def save_model(self, request, obj, form, change):
+    def save_model(self, request: Any, obj: Trainer, form: Any, change: bool) -> None:
+        """Сохранение тренера с автоматическим заполнением автора."""
         if not obj.created_by_id:
             obj.created_by = obj.user
         super().save_model(request, obj, form, change)
 
-    def save_formset(self, request, form, formset, change):
+    def save_formset(self, request: Any, form: Any, formset: Any, change: bool) -> None:
+        """Сохранение встроенных занятий тренера."""
         instances = formset.save(commit=False)
         for instance in instances:
             if isinstance(instance, FitnessClass):
@@ -128,20 +134,24 @@ class FitnessClassAdmin(admin.ModelAdmin):
         }),
     )
 
-    def get_trainer_name(self, obj):
+    def get_trainer_name(self, obj: FitnessClass) -> str:
+        """ФИО тренера занятия."""
         return obj.trainer.user.full_name if obj.trainer and obj.trainer.user else '-'
     get_trainer_name.short_description = 'Тренер'
 
-    def get_bookings_count(self, obj):
+    def get_bookings_count(self, obj: FitnessClass) -> int:
+        """Количество записей на занятие."""
         return obj.classbooking_set.count()
     get_bookings_count.short_description = 'Записей'
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+    def formfield_for_foreignkey(self, db_field: Any, request: Any, **kwargs: Any) -> Any:
+        """Настройка queryset для внешних ключей в форме занятия."""
         if db_field.name == 'trainer':
             kwargs['queryset'] = Trainer.objects.select_related('user').all()
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    def save_model(self, request, obj, form, change):
+    def save_model(self, request: Any, obj: FitnessClass, form: Any, change: bool) -> None:
+        """Сохранение занятия с автором и вместимостью по умолчанию."""
         if not obj.created_by_id and obj.trainer_id:
             obj.created_by = obj.trainer.user
         if not obj.capacity:
@@ -180,7 +190,8 @@ class MembershipAdmin(admin.ModelAdmin):
         }),
     )
 
-    def get_user_name(self, obj):
+    def get_user_name(self, obj: Membership) -> str:
+        """ФИО владельца абонемента."""
         return obj.user.full_name
     get_user_name.short_description = 'Пользователь'
 
@@ -196,11 +207,13 @@ class ClassBookingAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     exclude = ('updated_by',)
 
-    def get_user_name(self, obj):
+    def get_user_name(self, obj: ClassBooking) -> str:
+        """ФИО пользователя, записанного на занятие."""
         return obj.user.full_name
     get_user_name.short_description = 'Пользователь'
 
-    def get_class_name(self, obj):
+    def get_class_name(self, obj: ClassBooking) -> str:
+        """Название занятия в записи."""
         return obj.fitness_class.name if obj.fitness_class else '-'
     get_class_name.short_description = 'Занятие'
 
@@ -212,10 +225,12 @@ class FavoriteClassAdmin(admin.ModelAdmin):
     raw_id_fields = ('user', 'fitness_class')
     readonly_fields = ('created_at',)
 
-    def get_user_name(self, obj):
+    def get_user_name(self, obj: FavoriteClass) -> str:
+        """ФИО пользователя, добавившего занятие в избранное."""
         return obj.user.full_name
     get_user_name.short_description = 'Пользователь'
 
-    def get_class_name(self, obj):
+    def get_class_name(self, obj: FavoriteClass) -> str:
+        """Название избранного занятия."""
         return obj.fitness_class.name if obj.fitness_class else '-'
     get_class_name.short_description = 'Занятие'

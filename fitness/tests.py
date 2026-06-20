@@ -19,7 +19,8 @@ from .validators import validate_membership_price, validate_phone_format
 
 
 class FitnessApiTests(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
+        """Подготовка тестовых ролей, пользователей, тренера, тарифа и занятия."""
         self.client = APIClient()
 
         self.client_role = Role.objects.create(name='Клиент')
@@ -68,23 +69,33 @@ class FitnessApiTests(TestCase):
             capacity=2,
         )
 
-    def authenticate(self, user=None):
+    def authenticate(self, user: User | None = None) -> None:
+        """
+        Авторизация тестового клиента через session user_id.
+
+        Args:
+            user: Пользователь для авторизации.
+        """
         session = self.client.session
         session['user_id'] = (user or self.user).id
         session.save()
 
-    def test_phone_validation_accepts_russian_phone(self):
+    def test_phone_validation_accepts_russian_phone(self) -> None:
+        """Проверка принятия корректного российского телефона."""
         self.assertEqual(validate_phone_format('+7 (999) 123-45-67'), '+79991234567')
 
-    def test_phone_validation_rejects_invalid_phone(self):
+    def test_phone_validation_rejects_invalid_phone(self) -> None:
+        """Проверка отклонения некорректного телефона."""
         with self.assertRaises(ValidationError):
             validate_phone_format('123')
 
-    def test_membership_price_validation_rejects_low_price(self):
+    def test_membership_price_validation_rejects_low_price(self) -> None:
+        """Проверка запрета слишком дешёвого тарифа."""
         with self.assertRaises(ValidationError):
             validate_membership_price(100)
 
-    def test_membership_serializer_rejects_wrong_dates(self):
+    def test_membership_serializer_rejects_wrong_dates(self) -> None:
+        """Проверка запрета неверного периода абонемента."""
         serializer = MembershipSerializer(data={
             'user': self.user.id,
             'tariff_type': self.tariff.id,
@@ -96,7 +107,8 @@ class FitnessApiTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('end_date', serializer.errors)
 
-    def test_fitness_class_serializer_uses_context_for_favorite_flag(self):
+    def test_fitness_class_serializer_uses_context_for_favorite_flag(self) -> None:
+        """Проверка флага избранного через context сериализатора."""
         serializer = FitnessClassSerializer(
             self.fitness_class,
             context={'favorite_class_ids': {self.fitness_class.id}},
@@ -104,7 +116,8 @@ class FitnessApiTests(TestCase):
 
         self.assertTrue(serializer.data['is_favorite'])
 
-    def test_fitness_classes_api_returns_annotated_fields(self):
+    def test_fitness_classes_api_returns_annotated_fields(self) -> None:
+        """Проверка аннотированных полей в API занятий."""
         ClassBooking.objects.create(
             user=self.user,
             fitness_class=self.fitness_class,
@@ -121,7 +134,8 @@ class FitnessApiTests(TestCase):
         self.assertEqual(item['favorite_count'], 1)
         self.assertIn('free_spots', item)
 
-    def test_fitness_class_filter_by_capacity(self):
+    def test_fitness_class_filter_by_capacity(self) -> None:
+        """Проверка фильтра занятий по вместимости."""
         FitnessClass.objects.create(
             trainer=self.trainer,
             name='Силовая',
@@ -134,7 +148,8 @@ class FitnessApiTests(TestCase):
         names = {item['name'] for item in response.data['results']}
         self.assertEqual(names, {'Силовая'})
 
-    def test_fitness_class_filter_has_free_spots(self):
+    def test_fitness_class_filter_has_free_spots(self) -> None:
+        """Проверка фильтра занятий по наличию свободных мест."""
         ClassBooking.objects.create(user=self.user, fitness_class=self.fitness_class, status='booked')
         ClassBooking.objects.create(user=self.other_user, fitness_class=self.fitness_class, status='booked')
 
@@ -144,7 +159,8 @@ class FitnessApiTests(TestCase):
         names = {item['name'] for item in response.data['results']}
         self.assertIn('Йога утром', names)
 
-    def test_favorite_create_makes_class_favorite_in_context(self):
+    def test_favorite_create_makes_class_favorite_in_context(self) -> None:
+        """Проверка добавления занятия в избранное."""
         self.authenticate()
 
         favorite_response = self.client.post('/api/favorite-classes/', {
@@ -156,7 +172,8 @@ class FitnessApiTests(TestCase):
         self.assertEqual(favorite_response.status_code, 201)
         self.assertTrue(classes_response.data['results'][0]['is_favorite'])
 
-    def test_booking_create_requires_active_membership(self):
+    def test_booking_create_requires_active_membership(self) -> None:
+        """Проверка запрета записи без активного абонемента."""
         self.authenticate(self.other_user)
 
         response = self.client.post('/api/class-bookings/', {
@@ -168,7 +185,8 @@ class FitnessApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn('user', response.data)
 
-    def test_booking_create_success_with_active_membership(self):
+    def test_booking_create_success_with_active_membership(self) -> None:
+        """Проверка успешной записи при активном абонементе."""
         self.authenticate()
 
         response = self.client.post('/api/class-bookings/', {
@@ -180,7 +198,8 @@ class FitnessApiTests(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(ClassBooking.objects.count(), 1)
 
-    def test_membership_list_shows_only_current_user_memberships(self):
+    def test_membership_list_shows_only_current_user_memberships(self) -> None:
+        """Проверка ограничения списка абонементов текущим клиентом."""
         Membership.objects.create(
             user=self.other_user,
             tariff_type=self.tariff,
@@ -196,7 +215,8 @@ class FitnessApiTests(TestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['user'], self.user.id)
 
-    def test_profile_update_changes_user_data(self):
+    def test_profile_update_changes_user_data(self) -> None:
+        """Проверка сохранения данных в личном кабинете."""
         session = self.client.session
         session['user_id'] = self.user.id
         session.save()

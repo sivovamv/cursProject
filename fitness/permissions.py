@@ -1,10 +1,21 @@
+from typing import Any
+
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from .authentication import get_fitness_user, is_administrator
 
 
 class IsAdministrator(BasePermission):
-    def has_permission(self, request, view):
+    """Доступ только для пользователя с ролью администратора."""
+
+    def has_permission(self, request: Any, view: Any) -> bool:
+        """
+        Проверка права на выполнение действия.
+
+        Args:
+            request: DRF-запрос.
+            view: ViewSet или APIView.
+        """
         return is_administrator(get_fitness_user(request))
 
 
@@ -13,12 +24,27 @@ class IsOwnerOrAdministrator(BasePermission):
 
     owner_field = 'user'
 
-    def has_permission(self, request, view):
+    def has_permission(self, request: Any, view: Any) -> bool:
+        """
+        Проверка базового доступа к списку/созданию.
+
+        Args:
+            request: DRF-запрос.
+            view: ViewSet или APIView.
+        """
         if request.method in SAFE_METHODS:
             return True
         return get_fitness_user(request) is not None
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Any, view: Any, obj: Any) -> bool:
+        """
+        Проверка доступа к конкретному объекту.
+
+        Args:
+            request: DRF-запрос.
+            view: ViewSet или APIView.
+            obj: Проверяемый объект.
+        """
         user = get_fitness_user(request)
         if is_administrator(user):
             return True
@@ -27,7 +53,16 @@ class IsOwnerOrAdministrator(BasePermission):
 
 
 class ReadOnlyOrAdministrator(BasePermission):
-    def has_permission(self, request, view):
+    """Чтение разрешено всем, изменение только администратору."""
+
+    def has_permission(self, request: Any, view: Any) -> bool:
+        """
+        Проверка доступа к действию.
+
+        Args:
+            request: DRF-запрос.
+            view: ViewSet или APIView.
+        """
         if request.method in SAFE_METHODS:
             return True
         return is_administrator(get_fitness_user(request))

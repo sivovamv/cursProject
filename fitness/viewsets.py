@@ -1,11 +1,13 @@
 from datetime import date, datetime, timedelta
+from typing import Any
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .authentication import get_fitness_user, is_administrator
@@ -22,6 +24,8 @@ from .serializers import (
 
 
 class FitnessClassViewSet(viewsets.ModelViewSet):
+    """API для просмотра и управления занятиями фитнес-центра."""
+
     serializer_class = FitnessClassSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = FitnessClassFilter
@@ -30,7 +34,8 @@ class FitnessClassViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     permission_classes = [ReadOnlyOrAdministrator]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[FitnessClass]:
+        """QuerySet занятий с аннотациями для статистики и фильтрации."""
         queryset = FitnessClass.objects.select_related('trainer__user').annotate(
             active_bookings_count=Count(
                 'classbooking',
@@ -67,7 +72,8 @@ class FitnessClassViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def get_serializer_context(self):
+    def get_serializer_context(self) -> dict[str, Any]:
+        """Контекст сериализатора со списком избранных занятий пользователя."""
         context = super().get_serializer_context()
         user = get_fitness_user(self.request)
         if user:
@@ -79,13 +85,26 @@ class FitnessClassViewSet(viewsets.ModelViewSet):
         return context
 
     @action(methods=['GET'], detail=False)
-    def popular_classes(self, request):
+    def popular_classes(self, request: Request) -> Response:
+        """
+        Список самых популярных занятий.
+
+        Args:
+            request: DRF-запрос.
+        """
         classes = self.get_queryset().order_by('-active_bookings_count', '-favorite_count')[:10]
         serializer = self.get_serializer(classes, many=True)
         return Response(serializer.data)
 
     @action(methods=['POST'], detail=True, permission_classes=[IsAdministrator])
-    def cancel_booking(self, request, pk=None):
+    def cancel_booking(self, request: Request, pk: int | None = None) -> Response:
+        """
+        Отмена всех активных записей на выбранное занятие.
+
+        Args:
+            request: DRF-запрос.
+            pk: ID занятия.
+        """
         fitness_class = self.get_object()
         ClassBooking.objects.filter(
             fitness_class=fitness_class,
@@ -99,6 +118,8 @@ class FitnessClassViewSet(viewsets.ModelViewSet):
 
 
 class ClassBookingViewSet(viewsets.ModelViewSet):
+    """API для записей клиентов на занятия."""
+
     serializer_class = ClassBookingSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ClassBookingFilter
@@ -107,7 +128,8 @@ class ClassBookingViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     permission_classes = [IsOwnerOrAdministrator]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[ClassBooking]:
+        """QuerySet записей с ограничением по текущему клиенту."""
         qs = ClassBooking.objects.select_related(
             'user',
             'user__role',
@@ -119,14 +141,26 @@ class ClassBookingViewSet(viewsets.ModelViewSet):
             qs = qs.filter(user=user)
         return qs
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: ClassBookingSerializer) -> None:
+        """
+        Создание записи от имени текущего клиента.
+
+        Args:
+            serializer: Валидный сериализатор записи.
+        """
         user = get_fitness_user(self.request)
         if user and not is_administrator(user):
             serializer.save(user=user)
         else:
             serializer.save()
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """
+        Получение одной записи с проверкой владельца.
+
+        Args:
+            request: DRF-запрос.
+        """
         instance = self.get_object()
         user = get_fitness_user(request)
         if not is_administrator(user) and instance.user_id != getattr(user, 'id', None):
@@ -135,6 +169,8 @@ class ClassBookingViewSet(viewsets.ModelViewSet):
 
 
 class FavoriteClassViewSet(viewsets.ModelViewSet):
+    """API для избранных занятий клиента."""
+
     serializer_class = FavoriteClassSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['fitness_class', 'user']
@@ -142,14 +178,21 @@ class FavoriteClassViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     permission_classes = [IsOwnerOrAdministrator]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[FavoriteClass]:
+        """QuerySet избранного с ограничением по текущему клиенту."""
         qs = FavoriteClass.objects.select_related('user', 'user__role', 'fitness_class', 'fitness_class__trainer__user')
         user = get_fitness_user(self.request)
         if user and not is_administrator(user):
             qs = qs.filter(user=user)
         return qs
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: FavoriteClassSerializer) -> None:
+        """
+        Добавление занятия в избранное от имени текущего клиента.
+
+        Args:
+            serializer: Валидный сериализатор избранного.
+        """
         user = get_fitness_user(self.request)
         if user and not is_administrator(user):
             serializer.save(user=user)
@@ -158,6 +201,8 @@ class FavoriteClassViewSet(viewsets.ModelViewSet):
 
 
 class MembershipViewSet(viewsets.ModelViewSet):
+    """API для просмотра и управления абонементами."""
+
     serializer_class = MembershipSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = MembershipFilter
@@ -166,7 +211,8 @@ class MembershipViewSet(viewsets.ModelViewSet):
     ordering = ['-start_date']
     permission_classes = [IsOwnerOrAdministrator]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Membership]:
+        """QuerySet абонементов с фильтрацией по владельцу и параметрам."""
         queryset = Membership.objects.select_related('user', 'user__role', 'tariff_type')
         user = get_fitness_user(self.request)
         if user and not is_administrator(user):
@@ -194,7 +240,13 @@ class MembershipViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """
+        Получение абонемента с проверкой владельца.
+
+        Args:
+            request: DRF-запрос.
+        """
         instance = self.get_object()
         user = get_fitness_user(request)
         if not is_administrator(user) and instance.user_id != getattr(user, 'id', None):
@@ -202,7 +254,13 @@ class MembershipViewSet(viewsets.ModelViewSet):
         return super().retrieve(request, *args, **kwargs)
 
     @action(methods=['GET'], detail=False)
-    def active_memberships(self, request):
+    def active_memberships(self, request: Request) -> Response:
+        """
+        Список активных абонементов.
+
+        Args:
+            request: DRF-запрос.
+        """
         active = self.get_queryset().filter(
             status='active',
             start_date__lte=date.today(),
@@ -212,7 +270,14 @@ class MembershipViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(methods=['POST'], detail=True)
-    def freeze_membership(self, request, pk=None):
+    def freeze_membership(self, request: Request, pk: int | None = None) -> Response:
+        """
+        Заморозка активного абонемента.
+
+        Args:
+            request: DRF-запрос.
+            pk: ID абонемента.
+        """
         membership = self.get_object()
         if membership.status == 'active':
             membership.status = 'frozen'
@@ -228,6 +293,8 @@ class MembershipViewSet(viewsets.ModelViewSet):
 
 
 class TrainerViewSet(viewsets.ModelViewSet):
+    """API для просмотра и управления тренерами."""
+
     queryset = Trainer.objects.select_related('user').all()
     serializer_class = TrainerSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -238,7 +305,14 @@ class TrainerViewSet(viewsets.ModelViewSet):
     permission_classes = [ReadOnlyOrAdministrator]
 
     @action(methods=['POST'], detail=True, permission_classes=[IsAdministrator])
-    def update_specialization(self, request, pk=None):
+    def update_specialization(self, request: Request, pk: int | None = None) -> Response:
+        """
+        Обновление специализации тренера.
+
+        Args:
+            request: DRF-запрос.
+            pk: ID тренера.
+        """
         trainer = self.get_object()
         new_specialization = request.data.get('specialization')
 

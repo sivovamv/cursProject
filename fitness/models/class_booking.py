@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db import models
 from .user import User
 from .fitness_class import FitnessClass
@@ -27,14 +29,15 @@ class ClassBooking(models.Model):
         ordering = ['-created_at']
         unique_together = [('user', 'fitness_class', 'start_time')]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление записи на занятие."""
         class_name = self.fitness_class.name if self.fitness_class else 'Занятие'
         if self.start_time:
             return f'{self.user.full_name} — {class_name} ({self.start_time})'
         return f'{self.user.full_name} — {class_name}'
 
-    def clean(self):
-        """Бизнес-правила для новой клиентской записи (вызывается явно, не из админки)."""
+    def clean(self) -> None:
+        """Бизнес-правила для новой клиентской записи."""
         if self.status not in ('booked', 'attended'):
             return
         from ..validators import (
@@ -46,5 +49,12 @@ class ClassBooking(models.Model):
         validate_active_membership(self.user)
         validate_phone_format(self.user.phone)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Сохранение записи на занятие.
+
+        Args:
+            *args: Позиционные аргументы Django save().
+            **kwargs: Именованные аргументы Django save().
+        """
         super().save(*args, **kwargs)

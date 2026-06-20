@@ -18,15 +18,18 @@ class User(models.Model):
         verbose_name_plural = 'Пользователи'
         ordering = ['full_name']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление пользователя."""
         return self.full_name
 
     @property
-    def is_administrator(self):
+    def is_administrator(self) -> bool:
+        """Проверка, является ли пользователь администратором."""
         from ..constants import ROLE_ADMIN
         return self.role.name == ROLE_ADMIN
 
     @property
-    def is_client(self):
+    def is_client(self) -> bool:
+        """Проверка, является ли пользователь клиентом."""
         from ..constants import ROLE_CLIENT
         return self.role.name == ROLE_CLIENT

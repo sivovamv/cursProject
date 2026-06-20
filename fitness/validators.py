@@ -1,14 +1,20 @@
 import re
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 from django.core.exceptions import ValidationError
 
 from .constants import MAX_MEMBERSHIP_PRICE, MIN_MEMBERSHIP_PRICE, PHONE_REGEX, ROLE_ADMIN
 
 
-def validate_phone_format(phone):
-    """Проверка формата контактного телефона (+7 или 8 и 10 цифр)."""
+def validate_phone_format(phone: str) -> str:
+    """
+    Проверка формата контактного телефона.
+
+    Args:
+        phone: Телефон пользователя.
+    """
     if not phone or not phone.strip():
         raise ValidationError('Укажите контактный телефон для записи на занятие.')
     normalized = re.sub(r'[\s\-()]', '', phone.strip())
@@ -19,8 +25,13 @@ def validate_phone_format(phone):
     return normalized
 
 
-def validate_membership_price(price):
-    """Проверка минимальной и максимальной стоимости абонемента."""
+def validate_membership_price(price: Decimal | int | str) -> Decimal:
+    """
+    Проверка минимальной и максимальной стоимости абонемента.
+
+    Args:
+        price: Стоимость тарифа абонемента.
+    """
     price = Decimal(str(price))
     if price < MIN_MEMBERSHIP_PRICE:
         raise ValidationError(
@@ -33,16 +44,28 @@ def validate_membership_price(price):
     return price
 
 
-def get_active_bookings_count(fitness_class, exclude_booking_id=None):
-    """Число занятых мест на занятии (статусы booked и attended)."""
+def get_active_bookings_count(fitness_class: Any, exclude_booking_id: int | None = None) -> int:
+    """
+    Число занятых мест на занятии.
+
+    Args:
+        fitness_class: Объект занятия.
+        exclude_booking_id: ID записи, которую нужно исключить из подсчёта.
+    """
     qs = fitness_class.classbooking_set.filter(status__in=('booked', 'attended'))
     if exclude_booking_id:
         qs = qs.exclude(pk=exclude_booking_id)
     return qs.count()
 
 
-def validate_class_capacity(fitness_class, exclude_booking_id=None):
-    """Проверка наличия свободных мест на занятии."""
+def validate_class_capacity(fitness_class: Any, exclude_booking_id: int | None = None) -> None:
+    """
+    Проверка наличия свободных мест на занятии.
+
+    Args:
+        fitness_class: Объект занятия.
+        exclude_booking_id: ID редактируемой записи.
+    """
     occupied = get_active_bookings_count(fitness_class, exclude_booking_id)
     if occupied >= fitness_class.capacity:
         raise ValidationError(
@@ -51,8 +74,14 @@ def validate_class_capacity(fitness_class, exclude_booking_id=None):
         )
 
 
-def validate_active_membership(user, on_date=None):
-    """Проверка активного абонемента у клиента."""
+def validate_active_membership(user: Any, on_date: date | None = None) -> None:
+    """
+    Проверка активного абонемента у клиента.
+
+    Args:
+        user: Пользователь, который записывается на занятие.
+        on_date: Дата, на которую проверяется активность абонемента.
+    """
     on_date = on_date or date.today()
     has_membership = user.memberships.filter(
         status='active',
@@ -65,8 +94,14 @@ def validate_active_membership(user, on_date=None):
         )
 
 
-def user_can_access_booking(user, booking):
-    """Проверка прав доступа к записи: владелец или администратор."""
+def user_can_access_booking(user: Any, booking: Any) -> bool:
+    """
+    Проверка прав доступа к записи.
+
+    Args:
+        user: Текущий пользователь.
+        booking: Запись на занятие.
+    """
     if not user:
         return False
     if getattr(user, 'role', None) and user.role.name == ROLE_ADMIN:
@@ -74,8 +109,14 @@ def user_can_access_booking(user, booking):
     return booking.user_id == user.id
 
 
-def user_can_access_membership(user, membership):
-    """Проверка прав доступа к абонементу: владелец или администратор."""
+def user_can_access_membership(user: Any, membership: Any) -> bool:
+    """
+    Проверка прав доступа к абонементу.
+
+    Args:
+        user: Текущий пользователь.
+        membership: Абонемент.
+    """
     if not user:
         return False
     if getattr(user, 'role', None) and user.role.name == ROLE_ADMIN:

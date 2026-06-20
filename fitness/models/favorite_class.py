@@ -14,5 +14,6 @@ class FavoriteClass(models.Model):
         ordering = ['-created_at']
         unique_together = [('user', 'fitness_class')]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление избранного занятия."""
         return f'{self.user.full_name} добавил в избранное {self.fitness_class.name}'

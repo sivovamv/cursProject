@@ -1,20 +1,30 @@
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
-from django.http import Http404
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
 from ..models import User
 from ..decorators import get_session_user
 
 
-def index(request):
-    """Главная страница"""
+def index(request: HttpRequest) -> HttpResponse:
+    """
+    Главная страница проекта.
+
+    Args:
+        request: HTTP-запрос.
+    """
     return render(request, 'fitness/index.html', {
         'user': get_session_user(request),
     })
 
-def login_view(request):
-    """Форма входа"""
+def login_view(request: HttpRequest) -> HttpResponse:
+    """
+    Вход пользователя фитнес-центра.
+
+    Args:
+        request: HTTP-запрос с email и паролем.
+    """
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
@@ -61,25 +71,45 @@ def login_view(request):
     return render(request, 'fitness/login.html')
 
 
-def logout_view(request):
-    """Выход из системы"""
+def logout_view(request: HttpRequest) -> HttpResponse:
+    """
+    Выход пользователя из системы.
+
+    Args:
+        request: HTTP-запрос.
+    """
     request.session.flush()
     messages.success(request, 'Вы вышли из системы')
     return redirect('fitness:index')
 
 
-def api_test(request):
-    """Страница для тестирования API с кнопками"""
+def api_test(request: HttpRequest) -> HttpResponse:
+    """
+    Страница для ручного тестирования API.
+
+    Args:
+        request: HTTP-запрос.
+    """
     return render(request, 'fitness/api_test.html')
 
 
-def database_schema(request):
-    """Страница с визуальной схемой базы данных"""
+def database_schema(request: HttpRequest) -> HttpResponse:
+    """
+    Страница визуальной схемы базы данных.
+
+    Args:
+        request: HTTP-запрос.
+    """
     return render(request, 'fitness/database_schema.html')
 
 
-def sentry_debug(request):
-    """Тестовая ошибка для проверки интеграции Sentry в режиме разработки."""
+def sentry_debug(request: HttpRequest) -> HttpResponse:
+    """
+    Тестовая ошибка для проверки интеграции Sentry.
+
+    Args:
+        request: HTTP-запрос.
+    """
     if not settings.DEBUG:
         raise Http404
     raise RuntimeError('Sentry test error from fitness center project')

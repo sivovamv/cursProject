@@ -1,10 +1,12 @@
 import django_filters
-from django.db.models import F
+from django.db.models import F, QuerySet
 
 from .models import ClassBooking, FitnessClass, Membership
 
 
 class FitnessClassFilter(django_filters.FilterSet):
+    """Фильтрация занятий по тренеру, названию, вместимости и свободным местам."""
+
     name = django_filters.CharFilter(field_name='name', lookup_expr='icontains')
     trainer_name = django_filters.CharFilter(field_name='trainer__user__full_name', lookup_expr='icontains')
     capacity_min = django_filters.NumberFilter(field_name='capacity', lookup_expr='gte')
@@ -15,13 +17,23 @@ class FitnessClassFilter(django_filters.FilterSet):
         model = FitnessClass
         fields = ('trainer', 'name', 'trainer_name', 'capacity_min', 'capacity_max', 'has_free_spots')
 
-    def filter_has_free_spots(self, queryset, name, value):
+    def filter_has_free_spots(self, queryset: QuerySet, name: str, value: bool) -> QuerySet:
+        """
+        Фильтр занятий по наличию свободных мест.
+
+        Args:
+            queryset: Исходный QuerySet занятий.
+            name: Имя фильтра.
+            value: True для занятий со свободными местами.
+        """
         if value:
             return queryset.filter(capacity__gt=F('active_bookings_count'))
         return queryset.filter(capacity__lte=F('active_bookings_count'))
 
 
 class MembershipFilter(django_filters.FilterSet):
+    """Фильтрация абонементов по статусу, тарифу, цене и датам."""
+
     price_min = django_filters.NumberFilter(field_name='tariff_type__price', lookup_expr='gte')
     price_max = django_filters.NumberFilter(field_name='tariff_type__price', lookup_expr='lte')
     start_after = django_filters.DateFilter(field_name='start_date', lookup_expr='gte')
@@ -33,6 +45,8 @@ class MembershipFilter(django_filters.FilterSet):
 
 
 class ClassBookingFilter(django_filters.FilterSet):
+    """Фильтрация записей на занятия по статусу, занятию, клиенту и датам."""
+
     created_after = django_filters.DateFilter(field_name='created_at', lookup_expr='date__gte')
     created_before = django_filters.DateFilter(field_name='created_at', lookup_expr='date__lte')
     class_name = django_filters.CharFilter(field_name='fitness_class__name', lookup_expr='icontains')

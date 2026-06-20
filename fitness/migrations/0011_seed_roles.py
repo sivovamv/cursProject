@@ -1,7 +1,16 @@
+from typing import Any
+
 from django.db import migrations
 
 
-def seed_roles(apps, schema_editor):
+def seed_roles(apps: Any, schema_editor: Any) -> None:
+    """
+    Создание базовых ролей пользователей.
+
+    Args:
+        apps: Реестр моделей миграции.
+        schema_editor: Редактор схемы БД.
+    """
     Role = apps.get_model('fitness', 'Role')
     roles = [
         ('Администратор', 'Полный доступ к управлению фитнес-центром'),

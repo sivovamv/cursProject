@@ -27,5 +27,6 @@ class Membership(models.Model):
         verbose_name_plural = 'Абонементы'
         ordering = ['-start_date']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление абонемента."""
         return f'{self.user.full_name} - {self.tariff_type.name} ({self.start_date} - {self.end_date})'

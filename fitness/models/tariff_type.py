@@ -1,4 +1,5 @@
 from django.db import models
+from typing import Any
 
 
 class TariffType(models.Model):
@@ -13,13 +14,22 @@ class TariffType(models.Model):
         verbose_name_plural = 'Типы абонементов'
         ordering = ['name']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление типа абонемента."""
         return self.name
 
-    def clean(self):
+    def clean(self) -> None:
+        """Проверка бизнес-правил тарифа перед сохранением."""
         from ..validators import validate_membership_price
         validate_membership_price(self.price)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Сохранение тарифа с предварительной валидацией.
+
+        Args:
+            *args: Позиционные аргументы Django save().
+            **kwargs: Именованные аргументы Django save().
+        """
         self.full_clean()
         super().save(*args, **kwargs)

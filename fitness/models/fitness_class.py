@@ -24,7 +24,8 @@ class FitnessClass(models.Model):
         verbose_name_plural = 'Занятия'
         ordering = ['-created_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление занятия."""
         if self.trainer and self.trainer.user:
             return f'{self.name} - {self.trainer.user.full_name}'
         return self.name

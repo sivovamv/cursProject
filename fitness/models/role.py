@@ -10,5 +10,6 @@ class Role(models.Model):
         verbose_name_plural = 'Роли'
         ordering = ['name']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление роли."""
         return self.name

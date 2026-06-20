@@ -19,5 +19,6 @@ class Trainer(models.Model):
         verbose_name_plural = 'Тренеры'
         ordering = ['user__full_name']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление тренера."""
         return f'{self.user.full_name} - {self.specialization}'

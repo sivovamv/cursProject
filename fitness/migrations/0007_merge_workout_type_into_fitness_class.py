@@ -1,7 +1,16 @@
+from typing import Any
+
 from django.db import migrations, models
 
 
-def copy_workout_type_to_fitness_class(apps, schema_editor):
+def copy_workout_type_to_fitness_class(apps: Any, schema_editor: Any) -> None:
+    """
+    Перенос названия и описания типа тренировки в занятие.
+
+    Args:
+        apps: Реестр моделей миграции.
+        schema_editor: Редактор схемы БД.
+    """
     FitnessClass = apps.get_model('fitness', 'FitnessClass')
     for fitness_class in FitnessClass.objects.select_related('workout_type').all():
         workout_type = fitness_class.workout_type
@@ -14,7 +23,14 @@ def copy_workout_type_to_fitness_class(apps, schema_editor):
         fitness_class.save(update_fields=['name', 'description'])
 
 
-def copy_workout_type_to_historical_fitness_class(apps, schema_editor):
+def copy_workout_type_to_historical_fitness_class(apps: Any, schema_editor: Any) -> None:
+    """
+    Перенос названия и описания типа тренировки в исторические записи занятий.
+
+    Args:
+        apps: Реестр моделей миграции.
+        schema_editor: Редактор схемы БД.
+    """
     HistoricalFitnessClass = apps.get_model('fitness', 'HistoricalFitnessClass')
     WorkoutType = apps.get_model('fitness', 'WorkoutType')
     workout_types = {wt.pk: wt for wt in WorkoutType.objects.all()}

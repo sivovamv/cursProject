@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import Count, Q
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from ..decorators import get_session_user, login_required
@@ -11,8 +12,13 @@ from ..models import ClassBooking, FitnessClass, Membership, Trainer, User
 from ..validators import validate_phone_format
 
 
-def classes_list(request):
-    """Каталог занятий: поиск, фильтр по тренеру, свободные места."""
+def classes_list(request: HttpRequest) -> HttpResponse:
+    """
+    Каталог занятий с поиском, фильтрацией и свободными местами.
+
+    Args:
+        request: HTTP-запрос с параметрами фильтрации.
+    """
     classes = FitnessClass.objects.select_related('trainer__user').annotate(
         active_bookings_count=Count(
             'classbooking',
@@ -79,8 +85,14 @@ def classes_list(request):
 
 
 @login_required
-def book_class(request, pk):
-    """Запись на занятие."""
+def book_class(request: HttpRequest, pk: int) -> HttpResponse:
+    """
+    Запись текущего пользователя на занятие.
+
+    Args:
+        request: HTTP-запрос.
+        pk: ID занятия.
+    """
     fitness_class = get_object_or_404(
         FitnessClass.objects.select_related('trainer__user'),
         pk=pk,
@@ -106,8 +118,13 @@ def book_class(request, pk):
 
 
 @login_required
-def my_memberships(request):
-    """Абонементы и история посещений текущего пользователя."""
+def my_memberships(request: HttpRequest) -> HttpResponse:
+    """
+    Абонементы и история записей текущего пользователя.
+
+    Args:
+        request: HTTP-запрос.
+    """
     user = request.fitness_user
     memberships = Membership.objects.filter(user=user).select_related('tariff_type').order_by('-start_date')
     bookings = ClassBooking.objects.filter(user=user).select_related(
@@ -124,8 +141,13 @@ def my_memberships(request):
 
 
 @login_required
-def profile(request):
-    """Личный кабинет: редактирование профиля."""
+def profile(request: HttpRequest) -> HttpResponse:
+    """
+    Личный кабинет с редактированием ФИО, e-mail и телефона.
+
+    Args:
+        request: HTTP-запрос с данными профиля.
+    """
     user = request.fitness_user
 
     if request.method == 'POST':

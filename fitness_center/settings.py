@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django_filters',
     'simple_history',
     'import_export',
+    'silk',
     'fitness',  # наше приложение
 ]
 
@@ -38,6 +39,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'silk.middleware.SilkyMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -142,6 +144,12 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 }
+
+# Django Silk
+# Профилировщик запросов доступен в режиме разработки по адресу /silk/.
+SILKY_AUTHENTICATION = False
+SILKY_AUTHORISATION = False
+SILKY_META = True
 
 
 # Sentry
