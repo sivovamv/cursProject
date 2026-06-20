@@ -1,6 +1,8 @@
-from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
+from django.conf import settings
+from django.http import Http404
+from django.shortcuts import render, redirect
 from ..models import User
 from ..decorators import get_session_user
 
@@ -74,3 +76,10 @@ def api_test(request):
 def database_schema(request):
     """Страница с визуальной схемой базы данных"""
     return render(request, 'fitness/database_schema.html')
+
+
+def sentry_debug(request):
+    """Тестовая ошибка для проверки интеграции Sentry в режиме разработки."""
+    if not settings.DEBUG:
+        raise Http404
+    raise RuntimeError('Sentry test error from fitness center project')

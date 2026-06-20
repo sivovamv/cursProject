@@ -142,3 +142,22 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 }
+
+
+# Sentry
+# Для включения задайте переменную окружения SENTRY_DSN.
+# Без DSN проект работает как обычно, ошибки никуда не отправляются.
+SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
+
+if SENTRY_DSN.startswith(('http://', 'https://')):
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        environment=os.environ.get('SENTRY_ENVIRONMENT', 'development'),
+        release=os.environ.get('SENTRY_RELEASE', 'fitness-center@1.0.0'),
+        traces_sample_rate=float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '0.0')),
+        send_default_pii=False,
+    )
